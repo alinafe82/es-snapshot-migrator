@@ -31,6 +31,8 @@ uv run --extra dev ruff check .
 - `migrator.cli` provides a local demo entry point.
 
 See [docs/architecture.md](docs/architecture.md) for design details.
+See [docs/runbook.md](docs/runbook.md), [docs/security-notes.md](docs/security-notes.md),
+and [docs/production-readiness.md](docs/production-readiness.md) for operational notes.
 
 ## Limitations
 
