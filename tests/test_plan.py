@@ -1,3 +1,8 @@
+import pytest
+from click.testing import CliRunner
+from pydantic import ValidationError
+
+from migrator.cli import main
 from migrator.models import Index
 from migrator.plan import build_plan, select_indices
 
@@ -22,3 +27,37 @@ def test_build_plan_keeps_manifest_fields():
     assert plan.repository == "repo-a"
     assert plan.snapshot_name == "snap-001"
     assert [index.name for index in plan.indices] == ["logs-2026.01.01"]
+
+
+def test_build_plan_uses_custom_filter_thresholds():
+    data = [
+        Index(name="small-new", size_gb=100, created_days_ago=10),
+        Index(name="medium-new", size_gb=300, created_days_ago=10),
+    ]
+
+    plan = build_plan("repo-a", data, "snap-001", max_size_gb=150, max_age_days=30)
+
+    assert [index.name for index in plan.indices] == ["small-new"]
+
+
+def test_select_indices_rejects_negative_thresholds():
+    with pytest.raises(ValueError, match="max_size_gb"):
+        select_indices([], max_size_gb=-1)
+
+    with pytest.raises(ValueError, match="max_age_days"):
+        select_indices([], max_age_days=-1)
+
+
+def test_index_validation_rejects_invalid_metadata():
+    with pytest.raises(ValidationError):
+        Index(name="", size_gb=-1, created_days_ago=-1)
+
+
+def test_cli_emits_manifest_json():
+    runner = CliRunner()
+
+    result = runner.invoke(main, ["--repo", "cold-repo", "--snapshot", "snap-001"])
+
+    assert result.exit_code == 0
+    assert '"repository": "cold-repo"' in result.output
+    assert '"snapshot_name": "snap-001"' in result.output

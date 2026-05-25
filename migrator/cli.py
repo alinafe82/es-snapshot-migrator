@@ -13,14 +13,16 @@ console = Console()
 @click.command()
 @click.option("--repo", required=True, help="Snapshot repository name")
 @click.option("--snapshot", required=True, help="Snapshot name to create")
-def main(repo: str, snapshot: str) -> None:
+@click.option("--max-size-gb", default=500.0, type=click.FloatRange(0.0), show_default=True)
+@click.option("--max-age-days", default=365, type=click.IntRange(0), show_default=True)
+def main(repo: str, snapshot: str, max_size_gb: float, max_age_days: int) -> None:
     # Demo dataset
     data = [
         Index(name="logs-2025.07.01", size_gb=120.5, created_days_ago=20),
         Index(name="metrics-2024.02.10", size_gb=600.0, created_days_ago=500),
         Index(name="traces-2025.06.15", size_gb=80.0, created_days_ago=60),
     ]
-    plan = build_plan(repo, data, snapshot)
+    plan = build_plan(repo, data, snapshot, max_size_gb=max_size_gb, max_age_days=max_age_days)
     table = Table(title=f"Snapshot Plan: {snapshot} -> {repo}")
     table.add_column("Index")
     table.add_column("Size(GB)")
@@ -30,6 +32,7 @@ def main(repo: str, snapshot: str) -> None:
     console.print(table)
     console.print("Manifest (JSON):")
     console.print_json(data=json.loads(plan.model_dump_json()))
+
 
 if __name__ == "__main__":
     main()
