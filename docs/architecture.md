@@ -14,14 +14,15 @@ migration plan.
 ## Components
 
 - `Index`: metadata used for planning.
-- `Plan`: reviewable migration manifest.
+- `Plan`: reviewable migration manifest with selected and excluded indices.
 - `select_indices`: filtering logic.
 - CLI: local demonstration of manifest generation.
 
 ## Data Flow
 
 A list of indices enters the planner. The planner filters by size and age, then produces a
-snapshot manifest containing the selected indices, repository, and snapshot name.
+snapshot manifest containing the selected indices, excluded indices with reasons, repository,
+and snapshot name.
 
 ## Design Choices
 

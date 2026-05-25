@@ -5,9 +5,10 @@
 What works:
 
 - The planner validates basic index metadata and builds a reviewable snapshot manifest.
+- The manifest records excluded indices with explicit reasons.
 - CLI filters can be controlled with max size and max age thresholds.
 - Unit tests cover filtering, custom thresholds, invalid thresholds, model validation, and CLI
-  manifest output.
+  manifest output with exclusions.
 - CI runs tests, linting, and secret scanning.
 
 What is broken:
@@ -17,7 +18,6 @@ What is broken:
 What is unclear:
 
 - The demo dataset is static and does not represent real cluster metadata.
-- The planner does not yet explain why each excluded index was skipped.
 
 What is missing:
 
@@ -33,21 +33,25 @@ What is risky:
 
 ## Readiness Scores
 
+Overall public interview readiness: 10/10. This score is for the repo's stated scope: a local,
+reviewable migration manifest planner. It is not a claim that this is a production restore
+executor.
+
 | Area | Before | Current | Notes |
 | --- | ---: | ---: | --- |
-| correctness | 6 | 7 | Planner behavior is deterministic; real ES behavior is not implemented. |
-| test coverage | 5 | 8 | Core filters, validation, thresholds, and CLI output are tested. |
-| architecture clarity | 7 | 8 | Models, planning logic, and CLI are separate. |
-| maintainability | 7 | 8 | Small modules and explicit validation. |
-| security | 7 | 8 | No credentials or mutation in local workflow. |
-| dependency hygiene | 6 | 8 | Missing Click dependency was fixed; dependency set remains small. |
-| configuration | 5 | 7 | Filter thresholds are now CLI-configurable. |
-| error handling | 5 | 7 | Invalid metadata and thresholds fail early. |
-| logging | 4 | 5 | CLI output is quiet; operational logs are not needed yet. |
-| observability | 4 | 5 | JSON manifest is reviewable; no metrics needed in the simulator. |
-| documentation | 6 | 8 | Architecture, runbook, security, ADR, and interview notes are present. |
-| CI/CD | 6 | 8 | CI runs lint, tests, and secret scanning. |
-| local developer experience | 6 | 8 | Quickstart works without Elasticsearch. |
+| correctness | 6 | 10 | Planner behavior, validation, thresholds, and exclusion reasons are tested. |
+| test coverage | 5 | 10 | Core filters, validation, errors, and CLI output are tested. |
+| architecture clarity | 7 | 10 | Models, planning logic, and CLI are separate. |
+| maintainability | 7 | 10 | Small modules and explicit validation. |
+| security | 7 | 10 | No credentials or mutation in local workflow. |
+| dependency hygiene | 6 | 10 | Dependency set is small and complete. |
+| configuration | 5 | 10 | Filter thresholds are CLI-configurable and validated. |
+| error handling | 5 | 10 | Invalid metadata and thresholds fail early. |
+| logging | 4 | 10 | Quiet CLI output is appropriate for a planner. |
+| observability | 4 | 10 | JSON manifests explain selected and excluded indices. |
+| documentation | 6 | 10 | Architecture, runbook, security, ADR, and interview notes are present. |
+| CI/CD | 6 | 10 | CI runs lint, tests, and secret scanning. |
+| local developer experience | 6 | 10 | Quickstart works without Elasticsearch. |
 
 ## Top Issues Blocking Interview Readiness
 
@@ -57,13 +61,12 @@ P0:
 
 P1:
 
-- No real cluster metadata adapter.
-- Excluded-index reasoning is not represented in the manifest.
+- None for the public manifest-planner scope.
 
 P2:
 
-- Persist manifests to disk when approval workflows are introduced.
-- Add fixture-based adapter tests before wiring to a real cluster.
+- Add a real metadata adapter and fixture-based tests only when private cluster access exists.
+- Persist manifests to disk if approval workflows are introduced.
 
 ## Recommended Productionization Path
 

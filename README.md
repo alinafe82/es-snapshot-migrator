@@ -4,6 +4,7 @@ Plan Elasticsearch snapshot migration manifests.
 This repo models the planning step of an Elasticsearch migration. It filters candidate
 indices, builds a snapshot manifest, and prints a reviewable plan without connecting to a real
 cluster.
+The manifest includes selected indices and excluded indices with reasons.
 
 The project is intentionally small. It focuses on the part that is easiest to test and safest
 to show publicly: deciding what should move before any restore job is executed.

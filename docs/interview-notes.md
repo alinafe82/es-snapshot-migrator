@@ -29,7 +29,8 @@ how I isolate deterministic planning from operational execution.
 
 - Fixed the missing Click dependency so the documented CLI works from a fresh install.
 - Added model validation and configurable filter thresholds.
-- Added tests for invalid metadata, invalid thresholds, custom thresholds, and CLI output.
+- Added excluded-index reasons and tests for invalid metadata, invalid thresholds, custom
+  thresholds, and CLI output.
 - Added production-readiness, security, runbook, and core design ADR docs.
 
 ## Likely Questions
