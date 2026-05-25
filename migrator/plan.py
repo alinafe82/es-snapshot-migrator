@@ -1,4 +1,26 @@
-from .models import Index, Plan
+from .models import Index, IndexExclusion, Plan
+
+
+def validate_thresholds(max_size_gb: float, max_age_days: int) -> None:
+    if max_size_gb < 0:
+        raise ValueError("max_size_gb must be non-negative")
+    if max_age_days < 0:
+        raise ValueError("max_age_days must be non-negative")
+
+
+def exclusion_reasons(
+    index: Index,
+    max_size_gb: float = 500.0,
+    max_age_days: int = 365,
+) -> list[str]:
+    reasons = []
+    if index.size_gb > max_size_gb:
+        reasons.append(f"size_gb {index.size_gb} exceeds max_size_gb {max_size_gb}")
+    if index.created_days_ago > max_age_days:
+        reasons.append(
+            f"created_days_ago {index.created_days_ago} exceeds max_age_days {max_age_days}"
+        )
+    return reasons
 
 
 def select_indices(
@@ -6,12 +28,9 @@ def select_indices(
     max_size_gb: float = 500.0,
     max_age_days: int = 365,
 ) -> list[Index]:
-    if max_size_gb < 0:
-        raise ValueError("max_size_gb must be non-negative")
-    if max_age_days < 0:
-        raise ValueError("max_age_days must be non-negative")
+    validate_thresholds(max_size_gb, max_age_days)
 
-    return [i for i in indices if i.size_gb <= max_size_gb and i.created_days_ago <= max_age_days]
+    return [i for i in indices if not exclusion_reasons(i, max_size_gb, max_age_days)]
 
 
 def build_plan(
@@ -21,5 +40,20 @@ def build_plan(
     max_size_gb: float = 500.0,
     max_age_days: int = 365,
 ) -> Plan:
-    chosen = select_indices(indices, max_size_gb=max_size_gb, max_age_days=max_age_days)
-    return Plan(repository=repo, indices=chosen, snapshot_name=snapshot)
+    validate_thresholds(max_size_gb, max_age_days)
+
+    chosen = []
+    excluded = []
+    for index in indices:
+        reasons = exclusion_reasons(index, max_size_gb=max_size_gb, max_age_days=max_age_days)
+        if reasons:
+            excluded.append(IndexExclusion(index=index, reasons=reasons))
+        else:
+            chosen.append(index)
+
+    return Plan(
+        repository=repo,
+        indices=chosen,
+        excluded_indices=excluded,
+        snapshot_name=snapshot,
+    )
