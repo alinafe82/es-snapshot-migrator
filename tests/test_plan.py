@@ -3,7 +3,7 @@ from click.testing import CliRunner
 from pydantic import ValidationError
 
 from migrator.cli import main
-from migrator.models import Index
+from migrator.models import Index, Plan
 from migrator.plan import build_plan, exclusion_reasons, select_indices
 
 
@@ -54,6 +54,31 @@ def test_select_indices_rejects_negative_thresholds():
 def test_index_validation_rejects_invalid_metadata():
     with pytest.raises(ValidationError):
         Index(name="", size_gb=-1, created_days_ago=-1)
+
+    with pytest.raises(ValidationError):
+        Index(name="   ", size_gb=1, created_days_ago=1)
+
+
+def test_build_plan_rejects_duplicate_index_names():
+    duplicate_indices = [
+        Index(name="logs-2026", size_gb=10, created_days_ago=2),
+        Index(name="logs-2026", size_gb=12, created_days_ago=3),
+    ]
+
+    with pytest.raises(ValueError, match="duplicate index names: logs-2026"):
+        build_plan("repo-a", duplicate_indices, "snap-001")
+
+
+def test_plan_normalizes_and_rejects_blank_identifiers():
+    plan = Plan(repository="  repo-a  ", indices=[], snapshot_name="  snap-001  ")
+    assert plan.repository == "repo-a"
+    assert plan.snapshot_name == "snap-001"
+
+    with pytest.raises(ValidationError, match="plan identifiers must not be blank"):
+        Plan(repository="   ", indices=[], snapshot_name="snap-001")
+
+    with pytest.raises(ValidationError, match="plan identifiers must not be blank"):
+        Plan(repository="repo-a", indices=[], snapshot_name="   ")
 
 
 def test_exclusion_reasons_explains_all_failed_filters():
