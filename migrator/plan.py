@@ -42,6 +42,16 @@ def build_plan(
 ) -> Plan:
     validate_thresholds(max_size_gb, max_age_days)
 
+    seen_names: set[str] = set()
+    duplicate_names: set[str] = set()
+    for index in indices:
+        if index.name in seen_names:
+            duplicate_names.add(index.name)
+        seen_names.add(index.name)
+    if duplicate_names:
+        names = ", ".join(sorted(duplicate_names))
+        raise ValueError(f"duplicate index names: {names}")
+
     chosen = []
     excluded = []
     for index in indices:
